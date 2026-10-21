@@ -10437,6 +10437,50 @@ try{if(typeof NF_DEF==='object'&&NF_DEF.prayer)NF_DEF.prayer.on=true;}catch(e){}
   try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.addListener)A.addListener('resume',()=>setTimeout(restore,300));}catch(e){}
 })();
 </script>
+<style id="tg-diary-detail-1065">
+html body #diaryBody#diaryBody#diaryBody button.dy-detail-sw,html body #diaryBody#diaryBody#diaryBody button.dy-detail-sw:not(.on){display:flex!important;flex-direction:row!important;position:relative!important;height:auto!important;min-height:58px!important;max-height:none!important;overflow:visible!important;white-space:normal!important;padding:10px 14px!important;line-height:1.3!important;border:1px solid var(--pink-line)!important;background:var(--card,#fff)!important;box-shadow:none!important;transform:none!important}
+html body #diaryBody#diaryBody#diaryBody button.dy-detail-sw span{display:block!important;position:static!important;flex:1 1 auto;min-width:0}
+html body #diaryBody#diaryBody#diaryBody button.dy-detail-sw b{position:static!important;margin:0!important;padding:0!important;background:none!important;color:var(--ink)!important}
+html body #diaryBody .dy-detail-sw{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:2px 0 10px;padding:10px 14px;min-height:54px;border:1px solid var(--pink-line);border-radius:16px;background:var(--card,#fff);font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+html body #diaryBody .dy-detail-sw b{display:block;font-size:17px;font-weight:800}
+html body #diaryBody .dy-detail-sw small{display:block;font-size:13px;color:var(--sub,#777);margin-top:2px;line-height:1.35}
+html body #diaryBody .dy-detail-sw i{font-style:normal;flex:0 0 auto;width:52px;height:30px;border-radius:999px;background:#cfd6d2;position:relative;transition:background .15s}
+html body #diaryBody .dy-detail-sw i::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s}
+html body #diaryBody .dy-detail-sw.on i{background:var(--accent,#2f7d4f)}
+html body #diaryBody .dy-detail-sw.on i::after{left:25px}
+html body #tgTodayFab{position:fixed;right:16px;z-index:5001;display:flex;align-items:center;gap:6px;height:48px;padding:0 18px;border:0;border-radius:999px;background:var(--accent,#2f7d4f);color:#fff;font:inherit;font-size:17px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer}
+html body #tgTodayFab[hidden]{display:none}
+html body.modal-open #tgTodayFab,html body.kb-open #tgTodayFab{display:none}
+</style>
+<script id="tg-diary-detail-js-1065">
+/* 1.0.65: 일기장 맨 위에 '자세히 보기' 스위치 (설정의 '일기장 자세히 쓰기'와 같은 것)
+   켜면: 어제의 약속 · 시간별 나 · 더 쓰기(일기·잘한 점·감사·내일 약속)가 다 펼쳐져요 */
+(function(){if(typeof renderDiary!=='function')return;const f=renderDiary;
+  renderDiary=function(){const on=appMode()==='detail';if(on&&diary.moreOpen==null)diary.moreOpen=true;
+    const r=f.apply(this,arguments);
+    try{const b=$('diaryBody');if(b&&!b.querySelector('.dy-detail-sw')){
+      const nav=b.querySelector('.dy-nav');let top=nav;while(top&&top.parentElement&&top.parentElement!==b)top=top.parentElement;
+      const sw=document.createElement('button');sw.type='button';sw.className='dy-detail-sw'+(on?' on':'');sw.setAttribute('aria-pressed',on?'true':'false');
+      sw.innerHTML='<span><b>자세히 보기</b><small>'+(on?'시간별 나 · 약속 · 더 쓰기가 다 보여요':'켜면 시간별 나 · 더 쓰기가 다 보여요')+'</small></span><i></i>';
+      sw.onclick=()=>{const next=appMode()==='detail'?'simple':'detail';try{diaryFlush();}catch(e){}diary.moreOpen=next==='detail';setAppMode(next);if(!$('diaryModal').classList.contains('open'))return;};
+      if(top&&top.nextSibling)b.insertBefore(sw,top.nextSibling);else b.insertBefore(sw,b.firstChild);}}catch(e){}
+    return r;};
+})();
+/* 1.0.65: 오늘 띠를 꺼도 오늘로 돌아갈 수 있게 — 오늘 띠가 안 보이고 다른 달을 볼 때 오른쪽 아래에 [오늘로] 단추 (오늘 띠가 보이면 띠 안의 '오늘로'를 써요) */
+(function(){
+  const fab=document.createElement('button');fab.type='button';fab.id='tgTodayFab';fab.hidden=true;fab.setAttribute('aria-label','오늘 날짜로 돌아가기');
+  fab.innerHTML='<span aria-hidden="true">↩</span> 오늘로';fab.onclick=()=>{try{goToday();}catch(e){}};
+  document.body.appendChild(fab);
+  const place=()=>{const nav=$('bottomNav');let h=0;try{const r=nav&&nav.getBoundingClientRect();if(r&&r.height&&getComputedStyle(nav).display!=='none')h=window.innerHeight-r.top;}catch(e){}fab.style.bottom=(Math.max(0,h)+14)+'px';};
+  const sync=()=>{try{const t=todayDate();const away=viewDate.getFullYear()!==t.getFullYear()||viewDate.getMonth()!==t.getMonth();
+      const onCal=!document.querySelector('.modal.open'),si=$('stripItems'),stripShown=!!(si&&si.offsetParent!==null);fab.hidden=!(away&&onCal&&!stripShown);place();}catch(e){}};
+  if(typeof renderCalendar==='function'){const f=renderCalendar;renderCalendar=function(){const r=f.apply(this,arguments);sync();return r;};}
+  window.addEventListener('resize',place);
+  new MutationObserver(sync).observe(document.body,{attributes:true,attributeFilter:['class'],subtree:false});
+  document.addEventListener('click',()=>setTimeout(sync,50),true);
+  setTimeout(sync,800);
+})();
+</script>
 </body>
 </html>
 
