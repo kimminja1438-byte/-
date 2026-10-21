@@ -4316,7 +4316,7 @@ html body[class][class][class][class][class][class][class][class][class][class][
 <div id="appIconModal" class="modal"><div class="panel tall"><div class="p-head"><div class="ghost"></div><div class="p-title">앱 아이콘</div><button type="button" class="x-btn" onclick="closeModal('appIconModal')" aria-label="닫기">×</button></div><div class="p-body"><p id="appIconStatus" class="hint" role="status"></p><div id="appIconChoices" class="app-icon-choices"></div><p class="hint">휴대폰 홈 화면 아이콘을 바꿔요. Play 스토어의 대표 아이콘은 바뀌지 않아요.</p></div></div></div>
 <div id="widgetPreviewModal" class="modal"><div class="panel tall">
   <div class="p-head"><div class="ghost"></div><div class="p-title">🏠 홈 화면 위젯</div><button class="x-btn" onclick="closeModal('widgetPreviewModal')" aria-label="닫기">×</button></div>
-  <div class="p-sub">홈 화면에 놓는 위젯은 세 가지예요.</div>
+  <div class="p-sub">홈 화면에 놓는 위젯은 네 가지예요.</div>
   <div class="p-body">
     <div id="widgetPreviewBody"></div>
     
@@ -10311,6 +10311,50 @@ prayerSlotTableHtml=function(periods){
     let cur;try{cur=orig()?cal:my;}catch(e){cur=my;}cur=Object.assign({},cur||my||cal||{});
     if(cal&&cal.items){cal.items=[];}   /* 달력 위젯은 일정 제목 없이 */
     cur.calMy=my;cur.calCal=cal;return cur;};})();
+</script>
+<style id="tg-widget-show-1064b">
+html body .wg-guide .wg-show{background:var(--card,#fff);border:1px solid var(--pink-line);border-radius:16px;padding:12px 12px 6px;margin:6px 0 10px}
+html body .wg-guide .wg-show h4{margin:0 0 4px;font-size:17px;color:var(--ink);font-weight:800}
+html body .wg-guide .wg-show p{margin:0 0 8px;font-size:13.5px;color:var(--sub,#666);line-height:1.4}
+html body .wg-guide .wg-tog{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:48px;padding:8px 4px;border:0;border-top:1px solid var(--pink-line);background:none;font:inherit;font-size:16px;color:var(--ink);text-align:left;cursor:pointer}
+html body .wg-guide .wg-tog:first-of-type{border-top:0}
+html body .wg-guide .wg-tog i{font-style:normal;flex:0 0 auto;width:50px;height:30px;border-radius:999px;background:#cfd6d2;position:relative;transition:background .15s}
+html body .wg-guide .wg-tog i::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s}
+html body .wg-guide .wg-tog.on i{background:var(--accent,#2f7d4f)}
+html body .wg-guide .wg-tog.on i::after{left:23px}
+html body .wg-guide .wg-tog small{display:block;font-size:12.5px;color:var(--sub,#777);margin-top:2px}
+</style>
+<script id="tg-widget-show-js-1064b">
+/* 1.0.64b: 위젯에 보일 것 — 내 일정 위젯 · 달력 위젯 따로 켜고 꺼요. 기본값은 그림과 같아요 */
+const WG_SHOW_KEY='taegeuk_widget_show_v1';
+const WG_SHOW_DEF={my:{prayer:true,suryeon:false,todo:true,chi:false,sch:true,mark:true,panel:false},cal:{prayer:true,suryeon:false,todo:false,chi:true,sch:false,mark:true,panel:false}};
+function widgetShow(){let c=null;try{c=JSON.parse(localStorage.getItem(WG_SHOW_KEY)||'null');}catch(e){c=null;}
+  const o={};for(const w of ['my','cal'])o[w]=Object.assign({},WG_SHOW_DEF[w],c&&c[w]||{});return o;}
+function toggleWidgetShow(w,k){const c=widgetShow();c[w][k]=!c[w][k];try{localStorage.setItem(WG_SHOW_KEY,JSON.stringify(c));}catch(e){toast('저장하지 못했어요.');return;}
+  renderWidgetGuide();try{syncWidget();}catch(e){}}
+(function(){if(typeof buildWidgetData!=='function')return;const f=buildWidgetData;
+  buildWidgetData=function(){const o=f.apply(this,arguments);try{if(o&&typeof o==='object')o.widgetShow=widgetShow();}catch(e){}return o;};})();
+(function(){
+  const ROWS=[['prayer','태극 기도 단추','누르면 다음 시진이 체크돼요'],['suryeon','수련 단추',''],['todo','할 일 단추','오늘 할 일 몇 개 했는지'],['chi','치성 단추','다음 치성 날짜와 D-day'],['sch','＋ 일정 단추','누르면 일정 쓰기가 열려요'],['mark','날짜 옆 작은 태극','기도를 모신 날에 보여요'],['panel','고른 날 일정 칸','날짜를 누르면 아래에 그날 일정']];
+  const box=(w,title,lead)=>{const c=widgetShow()[w];return '<div class="wg-show"><h4>'+title+'</h4><p>'+lead+'</p>'+ROWS.map(([k,l,sm])=>'<button type="button" class="wg-tog'+(c[k]?' on':'')+'" aria-pressed="'+(c[k]?'true':'false')+'" onclick="toggleWidgetShow(\''+w+'\',\''+k+'\')"><span>'+l+(sm?'<small>'+sm+'</small>':'')+'</span><i></i></button>').join('')+'</div>';};
+  renderWidgetGuide=function(){const sc=widgetScale(),b=$('widgetPreviewBody');if(!b)return;
+    const seg=[[1,'보통'],[1.2,'크게'],[1.4,'아주 크게']].map(([v,l])=>'<button type="button" class="'+(Math.abs(sc-v)<0.01?'on':'')+'" onclick="setWidgetScale('+v+')">'+l+'</button>').join('');
+    b.innerHTML='<div class="wg-guide">'+
+      '<div class="wg-card"><b>📅 태극도 내 일정 (큰 위젯)</b><span>내가 적은 일정 · 할 일 · 기도 태극</span><small>추천 크기: 4×5칸 이상</small></div>'+
+      '<div class="wg-card"><b>🗓 태극도 달력 (큰 위젯)</b><span>음력 · 반 · 치성 · 빨간날</span><small>추천 크기: 4×5칸 이상</small></div>'+
+      '<div class="wg-card"><b>☯ 태극도 오늘 (작은 위젯)</b><span>오늘 날짜 · 큰 태극기 · 시진별 기도 체크</span><small>추천 크기: 2×2칸 ~ 3×3칸</small></div>'+
+      '<div class="wg-card"><b>✓ 태극도 오늘 할 일</b><span>오늘 할 일과 반복 할 일 · 줄을 누르면 바로 ✓</span><small>추천 크기: 3×3칸</small></div>'+
+      '<div class="nf-lab" style="margin-top:14px">위젯에 보일 것</div>'+
+      box('my','태극도 내 일정 위젯','끄면 위젯에서 사라지고, 남은 단추가 넓어져요.')+
+      box('cal','태극도 달력 위젯','끄면 위젯에서 사라지고, 남은 단추가 넓어져요.')+
+      '<button type="button" class="btn primary" onclick="refreshHomeWidgets()">위젯 새로고침</button><div class="nf-lab" style="margin-top:14px">위젯 글씨 크기</div><div class="seg nf-seg wg-scale">'+seg+'</div>'+
+      '<div class="nf-lab" style="margin-top:14px">홈 화면에 놓는 방법</div>'+
+      '<ol class="wg-steps"><li>홈 화면의 빈 곳을 <b>길게</b> 눌러요.</li><li><b>위젯</b>을 눌러요.</li><li><b>태극도 생활달력</b>을 찾아 4가지 중에서 골라요.</li><li>테두리를 끌어서 크기를 맞춰요.</li><li>필요 없으면 위젯을 길게 눌러 <b>삭제</b>해요.</li></ol>'+
+      '<div class="hint">↩ 취소: 위젯에서 체크한 것이 있을 때만 보여요. 잘못 누른 것을 하나씩 되돌려요.</div></div>';};
+})();
+/* 1.0.64b: 기도 알림은 처음부터 켜져 있어요 (축시·진시·미시·술시). 휴대폰의 알림 허용은 따로 필요해요.
+   이미 알림을 직접 정해 둔 분은 그대로 둬요 (저장된 값이 먼저예요). */
+try{if(typeof NF_DEF==='object'&&NF_DEF.prayer)NF_DEF.prayer.on=true;}catch(e){}
 </script>
 </body>
 </html>
