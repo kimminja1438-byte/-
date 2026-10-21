@@ -10356,6 +10356,87 @@ function toggleWidgetShow(w,k){const c=widgetShow();c[w][k]=!c[w][k];try{localSt
    이미 알림을 직접 정해 둔 분은 그대로 둬요 (저장된 값이 먼저예요). */
 try{if(typeof NF_DEF==='object'&&NF_DEF.prayer)NF_DEF.prayer.on=true;}catch(e){}
 </script>
+<script id="tg-search-all-1065">
+/* 1.0.65: 🔍 찾기 — 앱에 적은 것을 다 찾아요
+   (일정·반복 일정 · 할 일 · 반복 할 일 · 일기 · 메모 · 스티커 · 공부 신청/예정/기록 · 치성 · 공휴일 · 실시간 방송 · 부정 기간 · 성금 명단 · 하루체크)
+   띄어쓰기는 상관없어요 ('무극절치성' = '무극절 치성'). 여러 낱말을 적으면 모두 들어간 것만 보여요. */
+(function(){
+  const N=v=>String(v==null?'':v).toLocaleLowerCase('ko-KR').replace(/\s+/g,'');
+  const strs=(o,depth)=>{const out=[];depth=depth||0;if(o==null||depth>4)return out;
+    if(typeof o==='string'){const t=o.trim();if(t&&!/^data:/.test(t)&&t.length<4000)out.push(t);return out;}
+    if(typeof o==='number')return out;
+    if(Array.isArray(o)){o.forEach(x=>out.push(...strs(x,depth+1)));return out;}
+    if(typeof o==='object')Object.keys(o).forEach(k=>out.push(...strs(o[k],depth+1)));return out;};
+  const LABELS=[['📝 메모','memo'],['📚 공부 소감','studyImpression'],['🕐 공부 시간','studyTime'],['👥 내수','studyNaesu'],['👥 외수','studyOesu'],['👥 회원','studyHoewon'],
+    ['☀️ 오전 공부 시간','studyAmTime'],['☀️ 오전 공부 소감','studyAmImpression'],['☀️ 오전 내수','studyAmNaesu'],['☀️ 오전 외수','studyAmOesu'],['☀️ 오전 회원','studyAmHoewon'],
+    ['🌙 오후 공부 시간','studyPmTime'],['🌙 오후 공부 소감','studyPmImpression'],['🌙 오후 내수','studyPmNaesu'],['🌙 오후 외수','studyPmOesu'],['🌙 오후 회원','studyPmHoewon'],['🪷 치성 시간','chiseongTime']];
+  const iconName=id=>{try{const x=ICON_MAP[id];return x&&x.label||'';}catch(e){return '';}};
+  runSearch=function(){
+    const raw=$('searchInput').value.trim();
+    if(!raw){$('searchList').innerHTML='<div class="empty">찾고 싶은 말을 적어주세요.<br>예: 무극절, 부산, 병원, 공부 신청, 일기, 생리</div>';return;}
+    const terms=raw.split(/\s+/).map(N).filter(Boolean),whole=N(raw);
+    const hit=t=>{const n=N(t);return n.includes(whole)||terms.every(x=>n.includes(x));};
+    const out=[],seen=new Set();
+    const add=(k,label,parts)=>{const t=(parts||[]).map(x=>String(x==null?'':x).trim()).filter(Boolean);const kk=unpadKey(k)||k;if(!kk)return;
+      const text=label+(t.length?' '+t.join(' · '):'');if(!hit(text))return;const id=kk+'|'+text;if(seen.has(id))return;seen.add(id);out.push({k:kk,text});};
+    const vy=viewDate.getFullYear(),ty=todayDate().getFullYear(),years=[...new Set([vy-1,vy,vy+1,ty-1,ty,ty+1])].sort();
+    /* 1) 달력에 있는 것: 치성 · 명절 · 공휴일 · 하지/동지 · 납향 */
+    years.forEach(y=>{for(let d=new Date(y,0,1);d.getFullYear()===y;d.setDate(d.getDate()+1)){const Y=d.getFullYear(),M=d.getMonth()+1,D=d.getDate(),k=keyOf(Y,M,D);
+      let info=null;try{info=getDayInfo(Y,M,D);}catch(e){}
+      if(info&&info.event)add(k,'🪷',[info.event+(info.isChiseongEvent!==false?' 치성':'')]);
+      let h=null;try{h=getHoliday(Y,M,D);}catch(e){}
+      if(h){const names=Array.isArray(h.names)?h.names:[String(h.name||h)];names.forEach(n=>add(k,'🔴 공휴일 빨간날',[n]));}}});
+    /* 2) 날마다 적은 기록 */
+    Object.keys(db).forEach(k=>{const r=db[k]||{};
+      LABELS.forEach(([l,f])=>{if(typeof r[f]==='string'&&r[f].trim())add(k,l,[r[f]]);});
+      if(r.diary)strs(r.diary).forEach(v=>add(k,'📖 일기',[v]));
+      if(Array.isArray(r.lifeEmojis)&&r.lifeEmojis.length)add(k,'✨ 스티커',r.lifeEmojis.map(iconName));
+      if(r.isStudyApplication){let t='';try{t=applicationText(r,k).split('\n')[0];}catch(e){}add(k,'📝 공부 신청',[t]);}
+      try{plannedDates(r).forEach(pd=>add(pd,'📚 공부 예정일',[]));}catch(e){}
+      if(r.isStudy)add(k,'🔖 공부한 날',['공부 참석']);
+      if(r.isChiseong)add(k,'🪷 치성 참석',[]);
+      const pc=prayerCount(r);if(pc)add(k,'🙏 기도',[pc+'번'+(Number(r.suppPrayerCount)?' (보충기도 '+r.suppPrayerCount+')':'')]);
+      if(Number(r.suryeonCount))add(k,'🕯 수련',[r.suryeonCount+'번']);});
+    /* 3) 일정 */
+    Object.keys(schDb).forEach(id=>{const s=schDb[id]||{},d=Array.isArray(s.details)?s.details:[];if(!s.date)return;
+      const rep=s.repeat&&s.repeat!=='none'?'(반복)':'';
+      add(s.date,'📅 일정',[s.title,s.allDay?'하루 종일':[s.timeStart,s.timeEnd].filter(Boolean).join('~'),s.location,...d.map(x=>typeof x==='string'?x:strs(x).join(' ')),s.memo,rep]);});
+    /* 4) 할 일 · 반복 할 일 */
+    Object.keys(todoDb||{}).forEach(k=>{const l=Array.isArray(todoDb[k])?todoDb[k]:[];l.forEach(t=>{if(t&&t.t)add(k,t.done?'✅ 할 일 (함)':'☐ 할 일',[t.t]);});});
+    (routines||[]).forEach(r=>{if(r&&r.t)add(todayKey(),'🔁 반복 할 일',[r.t]);});
+    /* 5) 실시간 방송 */
+    try{Object.keys(bcDb||{}).forEach(k=>{const v=bcDb[k];const t=typeof v==='string'?v:strs(v).join(' ');if(t)add(k,'📡 실시간 방송',[t]);});}catch(e){}
+    /* 6) 부정 기간 */
+    try{(periodSettings.history||[]).forEach(h=>{if(h&&h.start)add(h.start,'🩸 부정 기간',[h.type||'',(Number(h.duration)||'')+(h.duration?'일':'')]);});}catch(e){}
+    /* 7) 성금 명단 */
+    try{(offerPeople||[]).forEach(p=>{if(p&&p.name)add(todayKey(),'💝 성금 명단',[p.name,p.phone]);});}catch(e){}
+    /* 8) 하루체크 */
+    Object.keys(dailyDb||{}).forEach(k=>{const r=dailyDb[k]||{},hr=r.hourly||{};
+      const parts=Object.keys(hr).flatMap(h=>{const x=hr[h]||{};let st='';try{st=STATE_LABEL[stateOf(x)];}catch(e){}return [st,(x.methods||[]).join(', '),x.note,x.win].filter(Boolean).map(v=>h+'시 '+v);});
+      parts.forEach(p=>add(k,'😊 하루체크',[p]));if(r.awakeStudy)add(k,'😊 하루체크',['깨어있는공부']);});
+    out.sort((a,b)=>dateOfKey(a.k)-dateOfKey(b.k));
+    const MAX=400,list=out.length>MAX?out.slice(-MAX):out;
+    $('searchList').innerHTML=out.length?'<div class="hint" style="margin-bottom:4px">'+out.length+'개 찾았어요. 누르면 그 날짜로 가요.'+(out.length>MAX?'<br>너무 많아서 최근 '+MAX+'개만 보여요. 낱말을 더 적어 보세요.':'')+'</div>'+
+      list.map(o=>{const p=parseKey(o.k);return '<div class="rec-item tap" data-k="'+o.k+'"><div class="when">'+p[0]+'. '+p[1]+'. '+p[2]+'.</div><div class="more">'+esc(o.text)+'</div></div>';}).join('')
+      :'<div class="empty">찾는 기록이 없어요.<br>낱말을 짧게 적어 보세요. (예: \'무극절 치성\' → \'무극절\')</div>';
+  };
+})();
+/* 1.0.65: 찾기 칸에 적는 대로 바로 찾아요 (Enter를 안 눌러도) */
+(function(){const el=$('searchInput');if(!el)return;el.placeholder='일정·할 일·일기·방송·치성 등 무엇이든';let t=0;
+  el.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{try{runSearch();}catch(e){}},350);});})();
+/* 1.0.65: [달력]/[내 일정] 고른 것을 다음에 앱을 열 때도 그대로 (한 번 더 따로 적어 두고, 앱을 다시 열거나 돌아올 때 맞춰요) */
+(function(){const LV='taegeuk_last_view_v1';
+  const save=()=>{try{localStorage.setItem(LV,calendarOnlyMode()?'cal':'my');}catch(e){}};
+  const f=toggleCalendarRecords;toggleCalendarRecords=function(){const r=f.apply(this,arguments);save();return r;};
+  const restore=()=>{let v=null;try{v=localStorage.getItem(LV);}catch(e){}if(!v){save();return;}
+    const wantMy=v==='my';if(wantMy===!calendarOnlyMode())return;
+    try{localStorage.setItem('taegeuk_calendar_records_visible',wantMy?'1':'0');}catch(e){return;}
+    try{syncCalendarRecordsSwitch();renderCalendar();}catch(e){}};
+  restore();setTimeout(restore,1500);setTimeout(restore,4000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(restore,300);});
+  try{const A=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;if(A&&A.addListener)A.addListener('resume',()=>setTimeout(restore,300));}catch(e){}
+})();
+</script>
 </body>
 </html>
 
