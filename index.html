@@ -10466,20 +10466,25 @@ html body.modal-open #tgTodayFab,html body.kb-open #tgTodayFab{display:none}
       if(top&&top.nextSibling)b.insertBefore(sw,top.nextSibling);else b.insertBefore(sw,b.firstChild);}}catch(e){}
     return r;};
 })();
-/* 1.0.65: 오늘 띠를 꺼도 오늘로 돌아갈 수 있게 — 오늘 띠가 안 보이고 다른 달을 볼 때 오른쪽 아래에 [오늘로] 단추 (오늘 띠가 보이면 띠 안의 '오늘로'를 써요) */
+/* 1.0.65: 오늘 띠를 꺼도 오늘로 돌아갈 수 있게 — [내 일정] 화면에서만, 오늘 띠가 안 보이고 다른 달을 볼 때 오른쪽 아래 [오늘로]. 아래 메뉴 [달력]을 누르면 언제나 오늘로 */
 (function(){
   const fab=document.createElement('button');fab.type='button';fab.id='tgTodayFab';fab.hidden=true;fab.setAttribute('aria-label','오늘 날짜로 돌아가기');
   fab.innerHTML='<span aria-hidden="true">↩</span> 오늘로';fab.onclick=()=>{try{goToday();}catch(e){}};
   document.body.appendChild(fab);
   const place=()=>{const nav=$('bottomNav');let h=0;try{const r=nav&&nav.getBoundingClientRect();if(r&&r.height&&getComputedStyle(nav).display!=='none')h=window.innerHeight-r.top;}catch(e){}fab.style.bottom=(Math.max(0,h)+14)+'px';};
   const sync=()=>{try{const t=todayDate();const away=viewDate.getFullYear()!==t.getFullYear()||viewDate.getMonth()!==t.getMonth();
-      const onCal=!document.querySelector('.modal.open'),si=$('stripItems'),stripShown=!!(si&&si.offsetParent!==null);fab.hidden=!(away&&onCal&&!stripShown);place();}catch(e){}};
+      const onCal=!document.querySelector('.modal.open'),si=$('stripItems'),stripShown=!!(si&&si.offsetParent!==null),my=!calendarOnlyMode();fab.hidden=!(away&&onCal&&my&&!stripShown);place();}catch(e){}};
   if(typeof renderCalendar==='function'){const f=renderCalendar;renderCalendar=function(){const r=f.apply(this,arguments);sync();return r;};}
   window.addEventListener('resize',place);
   new MutationObserver(sync).observe(document.body,{attributes:true,attributeFilter:['class'],subtree:false});
   document.addEventListener('click',()=>setTimeout(sync,50),true);
   setTimeout(sync,800);
 })();
+</script>
+<script id="tg-nav-today-1065">
+/* 1.0.65: 아래 메뉴 [달력]을 누르면 오늘 날짜로 (다른 달을 보고 있어도) */
+(function(){if(typeof navTo!=='function')return;const f=navTo;
+  navTo=function(k){const r=f.apply(this,arguments);if(k==='cal'){try{const t=todayDate(),away=viewDate.getFullYear()!==t.getFullYear()||viewDate.getMonth()!==t.getMonth()||selectedKey!==todayKey();if(away)goToday();}catch(e){}}return r;};})();
 </script>
 </body>
 </html>
