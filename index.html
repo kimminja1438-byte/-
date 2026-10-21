@@ -10103,6 +10103,8 @@ html body[class] #dayModal#dayModal#dayModal#dayModal #dayMore .dm-chips button{
       sec.classList.remove('dv-hide');
       const h=sec.querySelector('.day-overview-heading h3'),name=h?h.textContent.trim():'',btn=sec.querySelector('.day-overview-heading button');
       if(!name||KEEP.test(name))return;
+      if(name==='할 일'&&!sec.classList.contains('dv-empty')&&btn){   /* 1.0.65: 할 일이 있으면 [수정·삭제] 단추 (할 일 창에서 고치고 지워요) */
+        btn.style.removeProperty('display');btn.textContent='수정·삭제';btn.setAttribute('aria-label','할 일 수정·삭제');return;}
       if(name==='일정'||name==='할 일'){
         if(btn)btn.style.setProperty('display','none','important');      /* 위의 큰 버튼이 같은 일을 해요 */
         if(sec.classList.contains('dv-empty'))sec.classList.add('dv-hide');
@@ -10552,6 +10554,34 @@ html body.calendar-only[class][class][class][class][class][class][class][class][
   window.addEventListener('resize',()=>setTimeout(fit,100));setTimeout(fit,900);setTimeout(fit,2500);
   try{document.fonts&&document.fonts.ready.then(()=>setTimeout(fit,50));document.fonts&&document.fonts.addEventListener&&document.fonts.addEventListener('loadingdone',()=>setTimeout(fit,50));}catch(e){}
   window.tgCalFit=fit;
+})();
+</script>
+<style id="tg-cal-nostk-1065">
+/* 1.0.65: [달력] 화면은 오로지 달력 — 스티커·고른 날 표시 없이 */
+html body.calendar-only[class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class] #calendar#calendar#calendar#calendar#calendar#calendar#calendar#calendar#calendar#calendar .cell .c-stk,html body.calendar-only[class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class] #calendar#calendar#calendar#calendar#calendar#calendar#calendar#calendar#calendar#calendar .cell .c-stk img{display:none!important;visibility:hidden!important}
+html body.calendar-only[class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class][class] #calendar#calendar#calendar#calendar#calendar#calendar#calendar#calendar#calendar#calendar .cell.sel:not(.today){background:var(--card,#fff)!important;box-shadow:none!important;outline:none!important}
+html body[class][class][class] #todoList#todoList .todo-row .grow.tg-editable{cursor:text}
+html body[class][class][class] #todoList#todoList .todo-row input.tg-todo-edit{flex:1 1 auto;min-width:0;font:inherit;font-size:17px;padding:6px 10px;border:2px solid var(--accent,#2f7d4f);border-radius:10px;background:#fff;color:var(--ink)}
+html body[class][class][class] #todoList#todoList .todo-row .tg-todo-pen{flex:0 0 auto;border:1px solid var(--line,#ddd);background:none;border-radius:999px;padding:4px 10px;margin-right:4px;font:inherit;font-size:14px;color:var(--accent,#2f7d4f);cursor:pointer}
+</style>
+<script id="tg-todo-edit-1065">
+/* 1.0.65: 할 일 창에서 글 고치기 — [고치기]를 누르거나 글을 누르면 바로 고쳐 쓸 수 있어요 (지우기는 ×) */
+(function(){const box=document.getElementById('todoList');if(!box)return;
+  const deco=()=>{box.querySelectorAll('.todo-row:not(.rep)').forEach(row=>{if(row.querySelector('.tg-todo-pen'))return;
+    const chk=row.querySelector('.todo-chk'),m=chk&&String(chk.getAttribute('onclick')||'').match(/toggleTodo\((\d+)\)/);if(!m)return;
+    const g=row.querySelector('.grow'),del=row.querySelector('.todo-del');if(!g)return;g.classList.add('tg-editable');g.dataset.tid=m[1];
+    const pen=document.createElement('button');pen.type='button';pen.className='tg-todo-pen';pen.textContent='고치기';pen.dataset.tid=m[1];pen.setAttribute('aria-label','할 일 고치기');
+    if(del)row.insertBefore(pen,del);else row.appendChild(pen);});};
+  const edit=(id)=>{const k=typeof todoKey!=='undefined'&&todoKey?todoKey:todayKey(),l=Array.isArray(todoDb[k])?todoDb[k]:[],t=l[id];if(!t)return;
+    const row=[...box.querySelectorAll('.tg-editable')].find(e=>e.dataset.tid===String(id));if(!row)return;
+    const inp=document.createElement('input');inp.type='text';inp.className='tg-todo-edit';inp.value=t.t||'';inp.maxLength=60;row.replaceWith(inp);inp.focus();try{inp.setSelectionRange(inp.value.length,inp.value.length);}catch(e){}
+    let done=false;const save=(ok)=>{if(done)return;done=true;const v=inp.value.trim();
+      if(ok&&v&&v!==t.t){t.t=v;todoDb[k]=l;saveTodos();toast('✓ 고쳤어요');}
+      try{renderTodo();}catch(e){}try{renderCalendar();}catch(e){}try{syncWidget();}catch(e){}try{refreshDayIfOpen();}catch(e){}};
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save(true);}else if(e.key==='Escape'){save(false);}});
+    inp.addEventListener('blur',()=>save(true));};
+  box.addEventListener('click',e=>{const p=e.target.closest('.tg-todo-pen,.tg-editable');if(!p)return;e.preventDefault();e.stopPropagation();edit(Number(p.dataset.tid));},true);
+  new MutationObserver(deco).observe(box,{childList:true,subtree:true});deco();
 })();
 </script>
 </body>
